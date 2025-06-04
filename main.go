@@ -89,8 +89,9 @@ func SendRequest() (string, error) {
 }
 
 func Commit(messageContent string) error {
+	commitFileName := "git_commit_editmsg"
 	// Create temp file
-	tmpFile, err := os.CreateTemp("", "commit-*.txt")
+	tmpFile, err := os.CreateTemp("", commitFileName)
 	if err != nil {
 		return err
 	}
@@ -103,7 +104,7 @@ func Commit(messageContent string) error {
 		return err
 	}
 
-	cmd := exec.Command("git", "commit")
+	cmd := exec.Command("git", "commit", "-t", tmpFile.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -143,7 +144,7 @@ func BuildMessages(template, ticket, commitType string) ([]Message, error) {
 
 func GetGitDiff() (string, error) {
 	// Execute the git diff command
-	cmd := exec.Command("git", "diff")
+	cmd := exec.Command("git", "diff", "HEAD")
 
 	// Capture the output of the command
 	output, err := cmd.CombinedOutput()
