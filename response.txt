@@ -1,0 +1,34 @@
+Response Message: Certainly! A good commit message is clear, concise, and provides enough context for future developers to understand the changes made. Here’s a template you can use for writing commit messages:
+
+---
+
+**Type: [Feature/Fix/Docs/Chore/Style/Refactor/Perf/Test]**
+
+**Summary:** [Brief description of the change]
+
+**Details:** [Detailed explanation of what was changed and why, if necessary]
+
+**Related Issues:** [#IssueNumber(s)]
+
+---
+
+### Example:
+
+**Type: Feature**
+
+**Summary:** Add user authentication for the login page
+
+**Details:** Implemented a new authentication mechanism using OAuth2. This includes adding new routes, updating the user model, and integrating with the OAuth2 provider. This change improves security and user experience by allowing users to log in using their preferred OAuth2 provider.
+
+**Related Issues:** #123
+
+---
+
+### Explanation:
+
+- **Type:** Specifies the type of change (e.g., Feature, Fix, Docs, Chore, Style, Refactor, Perf, Test).
+- **Summary:** A brief, one-line description of the change.
+- **Details:** An optional, more detailed explanation of the change, including why it was made, any caveats, or additional context.
+- **Related Issues:** References to any related issues or tasks, typically in the format of a ticket number (e.g., #123).
+
+Using this template will help ensure that your commit messages are informative and consistent.
