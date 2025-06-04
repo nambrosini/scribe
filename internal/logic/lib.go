@@ -12,7 +12,7 @@ import (
 
 const (
 	// URL        = "https://api.mistral.ai/v1/chat/completions"
-	URL        = "http://localhost:11434/api/generate"
+	URL        = "http://localhost:11434/api/chat"
 	KEY        = "SooCPfZithUlFcVgiKcBjk60zlKvF9nT"
 	TICKET_KEY = "TICKET"
 )
@@ -21,6 +21,8 @@ type Model string
 
 const (
 	MistralLargeLatest Model = "mistral-large-latest"
+	MistrallLatest     Model = "mistral:latest"
+	MistralSmallLatest Model = "mistral-small:latest"
 )
 
 type Role string
@@ -39,8 +41,9 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 		return "", nil
 	}
 	requestBody := RequestBody{
-		Model:    MistralLargeLatest,
+		Model:    MistrallLatest,
 		Messages: messages,
+		Stream:   false,
 	}
 	// requestBody := OllamaRequest{
 	// 	Model:  "mistral-small:latest",
@@ -84,8 +87,7 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 		panic(err)
 	}
 
-	return response.Response, nil
-	// return response.Choices[0].Message.Content, nil
+	return response.Message.Content, nil
 }
 
 func Commit(messageContent string) error {
@@ -159,6 +161,7 @@ func GetGitDiff() (string, error) {
 type RequestBody struct {
 	Model    Model     `json:"model,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
+	Stream   bool      `json:"stream"`
 }
 
 type Message struct {
@@ -189,12 +192,6 @@ type Choice struct {
 	FinishReason Reason
 }
 
-type OllamaRequest struct {
-	Model  string
-	Prompt string
-	Stream bool
-}
-
 type OllamaResponse struct {
-	Response string
+	Message Message
 }
