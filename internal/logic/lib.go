@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	URL        = "https://api.mistral.ai/v1/chat/completions"
+	// URL        = "https://api.mistral.ai/v1/chat/completions"
+	URL        = "http://localhost:11434/api/generate"
 	KEY        = "SooCPfZithUlFcVgiKcBjk60zlKvF9nT"
 	TICKET_KEY = "TICKET"
 )
@@ -37,9 +38,14 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	requestBody := RequestBody{
-		Model:    MistralLargeLatest,
-		Messages: messages,
+	// requestBody := RequestBody{
+	// 	Model:    MistralLargeLatest,
+	// 	Messages: messages,
+	// }
+	requestBody := OllamaRequest{
+		Model:  "mistral:7B",
+		Prompt: messages[0].Content + "\n" + messages[1].Content,
+		Stream: false,
 	}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
@@ -53,7 +59,7 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Authorization", "Bearer "+KEY)
+	// req.Header.Add("Authorization", "Bearer "+KEY)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -67,6 +73,8 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
+
+	fmt.Println(string(body))
 
 	var response ResponseBody
 
@@ -177,4 +185,10 @@ type Choice struct {
 	Index        int
 	Message      Message
 	FinishReason Reason
+}
+
+type OllamaRequest struct {
+	Model  string
+	Prompt string
+	Stream bool
 }
