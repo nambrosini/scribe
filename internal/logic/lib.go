@@ -38,15 +38,15 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	// requestBody := RequestBody{
-	// 	Model:    MistralLargeLatest,
-	// 	Messages: messages,
-	// }
-	requestBody := OllamaRequest{
-		Model:  "mistral:7B",
-		Prompt: messages[0].Content + "\n" + messages[1].Content,
-		Stream: false,
+	requestBody := RequestBody{
+		Model:    MistralLargeLatest,
+		Messages: messages,
 	}
+	// requestBody := OllamaRequest{
+	// 	Model:  "mistral-small:latest",
+	// 	Prompt: messages[0].Content + "\n" + messages[1].Content,
+	// 	Stream: false,
+	// }
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", nil
@@ -76,14 +76,16 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 
 	fmt.Println(string(body))
 
-	var response ResponseBody
+	// var response ResponseBody
+	var response OllamaResponse
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		panic(err)
 	}
 
-	return response.Choices[0].Message.Content, nil
+	return response.Response, nil
+	// return response.Choices[0].Message.Content, nil
 }
 
 func Commit(messageContent string) error {
@@ -191,4 +193,8 @@ type OllamaRequest struct {
 	Model  string
 	Prompt string
 	Stream bool
+}
+
+type OllamaResponse struct {
+	Response string
 }
