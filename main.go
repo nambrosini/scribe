@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -32,12 +33,14 @@ const (
 func main() {
 	msg, err := SendRequest()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
+		os.Exit(1)
 	}
 
 	err = Commit(msg)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
+		os.Exit(1)
 	}
 }
 
@@ -104,7 +107,7 @@ func Commit(messageContent string) error {
 		return err
 	}
 
-	cmd := exec.Command("git", "commit", "-F", tmpFile.Name(), "-e")
+	cmd := exec.Command("git", "commit", "-t", tmpFile.Name(), "-e")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

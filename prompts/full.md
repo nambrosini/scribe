@@ -27,3 +27,7 @@ Details:
 - Added binding to backhand user authentication
 
 ```
+
+## Further Notes
+
+The response should be plain text, so no markdown should be included.
