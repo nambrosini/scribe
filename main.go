@@ -43,7 +43,7 @@ func main() {
 
 func SendRequest() (string, error) {
 	ticket := os.Getenv(TICKET_KEY)
-	messages, err := BuildMessages("concise", ticket, "feat")
+	messages, err := BuildMessages("full", ticket, "feat")
 	if err != nil {
 		return "", nil
 	}
