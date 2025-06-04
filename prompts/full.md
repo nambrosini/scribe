@@ -27,5 +27,3 @@ Details:
 - Added binding to backhand user authentication
 
 ```
-
-## Given Fields

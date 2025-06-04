@@ -17,5 +17,3 @@
 ```
 feat: Add user authentication for the login page KAFKA-1698
 ```
-
-## Given Fields

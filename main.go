@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -31,37 +30,35 @@ const (
 )
 
 func main() {
-	// Execute the git diff command
-	cmd := exec.Command("git", "diff")
-
-	// Capture the output of the command
-	output, err := cmd.CombinedOutput()
+	msg, err := SendRequest()
 	if err != nil {
-		log.Fatalf("Error executing git diff: %v", err)
+		panic(err)
 	}
 
-	// Print the output
-	fmt.Printf("Git Diff Output:\n%s", output)
+	err = Commit(msg)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func SendRequest() {
+func SendRequest() (string, error) {
+	ticket := os.Getenv(TICKET_KEY)
+	messages, err := BuildMessages("concise", ticket, "feat")
+	if err != nil {
+		return "", nil
+	}
 	requestBody := RequestBody{
-		Model: MistralLargeLatest,
-		Messages: []Message{
-			{
-				Role:    User,
-				Content: "Could you please write me a prompt template for a commit message?",
-			},
-		},
+		Model:    MistralLargeLatest,
+		Messages: messages,
 	}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
-		panic(err)
+		return "", nil
 	}
 
 	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(body))
 	if err != nil {
-		panic(err)
+		return "", nil
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -71,15 +68,14 @@ func SendRequest() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return "", nil
 	}
 	defer resp.Body.Close()
 
 	// Read the response body
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Error reading response body: %v\n", err)
-		return
+		return "", nil
 	}
 
 	var response ResponseBody
@@ -89,25 +85,74 @@ func SendRequest() {
 		panic(err)
 	}
 
-	// Print the response body
-	fmt.Printf("Response Message: %s\n", response.Choices[0].Message.Content)
+	return response.Choices[0].Message.Content, nil
 }
 
-func NewMessage(template, ticket, commitType string) (*Message, error) {
-	fileContent, err := os.ReadFile(fmt.Sprintf("templates/%s.md", template))
+func Commit(messageContent string) error {
+	// Create temp file
+	tmpFile, err := os.CreateTemp("", "commit-*.txt")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(messageContent); err != nil {
+		return err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return err
+	}
+
+	cmd := exec.Command("git", "commit")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func BuildMessages(template, ticket, commitType string) ([]Message, error) {
+	fileContent, err := os.ReadFile(fmt.Sprintf("prompts/%s.md", template))
 	if err != nil {
 		return nil, err
 	}
 
-	content := string(fileContent)
+	systemMessage := Message{
+		Role:    System,
+		Content: string(fileContent),
+	}
 
-	content += fmt.Sprintf("\nTicket: %s", ticket)
-	content += fmt.Sprintf("\nType: %s", commitType)
+	diff, err := GetGitDiff()
+	if err != nil {
+		return nil, err
+	}
 
-	return &Message{
+	userMessage := Message{
 		Role:    User,
-		Content: content,
+		Content: fmt.Sprintf("Please create a commit message based on the git diff provided below, the following fields are given:\n- **Ticket:** %s\n- **Type:** %s\n\n ## **Git Diff:**\n\n%s", ticket, commitType, diff),
+	}
+
+	return []Message{
+		systemMessage,
+		userMessage,
 	}, nil
+}
+
+func GetGitDiff() (string, error) {
+	// Execute the git diff command
+	cmd := exec.Command("git", "diff")
+
+	// Capture the output of the command
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	// Print the output
+	return string(output), nil
 }
 
 type RequestBody struct {
