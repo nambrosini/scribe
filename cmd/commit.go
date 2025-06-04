@@ -44,9 +44,9 @@ var commitCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(commitCmd)
 
-	rootCmd.PersistentFlags().StringVar(&issue, "issue", "", "the issue that should be incluted in the commit description (default is read from the TICKET env variable)")
-	rootCmd.PersistentFlags().StringVar(&mode, "mode", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
-	rootCmd.PersistentFlags().StringVar(&templateFile, "templateFile", "", "the file with the template to be used by the llm, the content will be sent directly to the llm (mode will be ignored if this flag is set)")
-	rootCmd.PersistentFlags().StringVar(&commitType, "type", "feat", "the type of the commit to be used as prefix of commit summary (feat, fix, etc.)")
+	rootCmd.PersistentFlags().StringVarP(&issue, "issue", "i", "", "the issue that should be incluted in the commit description (default is read from the TICKET env variable)")
+	rootCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
+	rootCmd.PersistentFlags().StringVarP(&templateFile, "templateFile", "f", "", "the file with the template to be used by the llm, the content will be sent directly to the llm (mode will be ignored if this flag is set)")
+	rootCmd.PersistentFlags().StringVarP(&commitType, "type", "t", "feat", "the type of the commit to be used as prefix of commit summary (feat, fix, etc.)")
 
 }
