@@ -13,7 +13,6 @@ import (
 const (
 	// URL        = "https://api.mistral.ai/v1/chat/completions"
 	URL        = "http://localhost:11434/api/chat"
-	KEY        = "SooCPfZithUlFcVgiKcBjk60zlKvF9nT"
 	TICKET_KEY = "TICKET"
 )
 
@@ -41,7 +40,7 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 		return "", nil
 	}
 	requestBody := RequestBody{
-		Model:    MistrallLatest,
+		Model:    MistralSmallLatest,
 		Messages: messages,
 		Stream:   false,
 	}
@@ -62,6 +61,7 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
+	// KEY := os.Getenv("KEY")
 	// req.Header.Add("Authorization", "Bearer "+KEY)
 
 	client := &http.Client{}
@@ -76,8 +76,6 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-
-	fmt.Println(string(body))
 
 	// var response ResponseBody
 	var response OllamaResponse
