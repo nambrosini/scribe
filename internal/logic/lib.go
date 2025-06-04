@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+
+	"github.com/nambrosini/scribe/internal/config"
 )
 
 const (
@@ -34,35 +36,32 @@ const (
 func main() {
 }
 
-func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
-	messages, err := BuildMessages(mode, issue, commitType)
+func SendRequest(cfg config.AppConfig) (string, error) {
+	messages, err := BuildMessages(cfg.Commit.Template, cfg.Commit.Issue, cfg.Commit.Type)
 	if err != nil {
 		return "", nil
 	}
 	requestBody := RequestBody{
-		Model:    MistralSmallLatest,
+		Model:    Model(cfg.Model.Name),
 		Messages: messages,
 		Stream:   false,
 	}
-	// requestBody := OllamaRequest{
-	// 	Model:  "mistral-small:latest",
-	// 	Prompt: messages[0].Content + "\n" + messages[1].Content,
-	// 	Stream: false,
-	// }
+
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", nil
 	}
 
-	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, cfg.Model.Url, bytes.NewBuffer(body))
 	if err != nil {
 		return "", nil
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	// KEY := os.Getenv("KEY")
-	// req.Header.Add("Authorization", "Bearer "+KEY)
+	if cfg.Model.ApiKey != "" {
+		req.Header.Add("Authorization", "Bearer "+cfg.Model.ApiKey)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -77,15 +76,26 @@ func SendRequest(issue, mode, templateFile, commitType string) (string, error) {
 		return "", nil
 	}
 
-	// var response ResponseBody
-	var response OllamaResponse
+	if cfg.Model.ModelType == "ollama" {
+
+		// var response ResponseBody
+		var response OllamaResponse
+
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			panic(err)
+		}
+
+		return response.Message.Content, nil
+	}
+	var response ResponseBody
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		panic(err)
 	}
 
-	return response.Message.Content, nil
+	return response.Choices[0].Message.Content, nil
 }
 
 func Commit(messageContent string) error {
@@ -115,7 +125,7 @@ func Commit(messageContent string) error {
 	return nil
 }
 
-func BuildMessages(template, ticket, commitType string) ([]Message, error) {
+func BuildMessages(template, issue, commitType string) ([]Message, error) {
 	fileContent, err := os.ReadFile(fmt.Sprintf("prompts/%s.md", template))
 	if err != nil {
 		return nil, err
@@ -133,7 +143,7 @@ func BuildMessages(template, ticket, commitType string) ([]Message, error) {
 
 	userMessage := Message{
 		Role:    User,
-		Content: fmt.Sprintf("Please create a commit message based on the git diff provided below, the following fields are given:\n- **Ticket:** %s\n- **Type:** %s\n\n ## **Git Diff:**\n\n%s", ticket, commitType, diff),
+		Content: fmt.Sprintf("Please create a commit message based on the git diff provided below, the following fields are given:\n- **Ticket:** %s\n- **Type:** %s\n\n ## **Git Diff:**\n\n%s", issue, commitType, diff),
 	}
 
 	return []Message{

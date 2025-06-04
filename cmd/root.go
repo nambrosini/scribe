@@ -4,9 +4,22 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/nambrosini/scribe/internal/config"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var cfgFile string
+var cfg config.AppConfig
+
+var (
+	modelType string
+	url       string
+	apiKey    string
+	modelName string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -29,9 +42,34 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	cobra.OnInitialize(initConfig)
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.scribe.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&modelType, "modelType", "m", "mistral", "the model it should use (mistral|ollama)")
+	viper.BindPFlag("modelType", rootCmd.PersistentFlags().Lookup("model.modelType"))
+	rootCmd.PersistentFlags().StringVarP(&url, "url", "u", "https://api.mistral.ai/v1/chat/completions", "the url to the models rest api")
+	viper.BindPFlag("url", rootCmd.PersistentFlags().Lookup("model.url"))
+	rootCmd.PersistentFlags().StringVarP(&apiKey, "key", "k", "", "the key to use to authenticate against the rest api")
+	viper.BindPFlag("key", rootCmd.PersistentFlags().Lookup("model.apiKey"))
+	rootCmd.PersistentFlags().StringVarP(&modelName, "name", "n", "mistral-large-latest", "the model that should be used")
+	viper.BindPFlag("name", rootCmd.PersistentFlags().Lookup("model.name"))
+}
+
+func initConfig() {
+	viper.SetConfigType("toml")
+	viper.SetConfigName("scribe")
+	viper.AddConfigPath("$XDG_CONFIG_HOME")
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file: %s\n", err)
+	} else {
+		// Print the path of the configuration file used
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+
+	err := viper.Unmarshal(&cfg)
+	if err != nil {
+		panic(err)
+	}
 }

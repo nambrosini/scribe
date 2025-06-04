@@ -9,6 +9,7 @@ import (
 
 	"github.com/nambrosini/scribe/internal/logic"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,9 +27,9 @@ var commitCmd = &cobra.Command{
 	Note: before it commits, there is the possibility of making changes to the message.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if issue == "" {
-			issue = os.Getenv("TICKET")
+			issue = os.Getenv("ISSUE")
 		}
-		msg, err := logic.SendRequest(issue, mode, templateFile, commitType)
+		msg, err := logic.SendRequest(cfg)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -44,8 +45,10 @@ var commitCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(commitCmd)
 
-	rootCmd.PersistentFlags().StringVarP(&issue, "issue", "i", "", "the issue that should be incluted in the commit description (default is read from the TICKET env variable)")
-	rootCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
+	commitCmd.LocalFlags().StringVarP(&issue, "issue", "i", "", "the issue that should be incluted in the commit description (default is read from the ISSUE env variable)")
+	viper.BindPFlag("issue", commitCmd.Flags().Lookup("issue"))
+	rootCmd.PersistentFlags().StringVarP(&mode, "prompt", "p", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
+	viper.BindPFlag("prompt", commitCmd.Flags().Lookup("prompt"))
 	rootCmd.PersistentFlags().StringVarP(&templateFile, "templateFile", "f", "", "the file with the template to be used by the llm, the content will be sent directly to the llm (mode will be ignored if this flag is set)")
-	rootCmd.PersistentFlags().StringVarP(&commitType, "type", "t", "feat", "the type of the commit to be used as prefix of commit summary (feat, fix, etc.)")
+	viper.BindPFlag("promptFile", commitCmd.Flags().Lookup("promptFile"))
 }
