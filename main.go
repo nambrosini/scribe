@@ -104,7 +104,7 @@ func Commit(messageContent string) error {
 		return err
 	}
 
-	cmd := exec.Command("git", "commit", "-t", tmpFile.Name())
+	cmd := exec.Command("git", "commit", "-F", tmpFile.Name(), "-e")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
