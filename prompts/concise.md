@@ -17,3 +17,7 @@
 ```
 feat: Add user authentication for the login page KAFKA-1698
 ```
+
+## Further Notes
+
+The response should be plain text, so no markdown should be included.
