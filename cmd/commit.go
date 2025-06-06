@@ -14,7 +14,7 @@ import (
 
 var (
 	issue        string
-	mode         string
+	prompt       string
 	templateFile string
 	commitType   string
 )
@@ -46,9 +46,9 @@ func init() {
 	viper.BindPFlag("commit.issue", commitCmd.Flags().Lookup("issue"))
 	viper.BindEnv("commit.issue", "COMMIT_ISSUE")
 
-	rootCmd.LocalFlags().StringVarP(&mode, "prompt", "p", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
+	commitCmd.LocalFlags().StringVarP(&prompt, "prompt", "p", "concise", "if the commit text will be concise (one line) or full (one line with text), default is concise")
 	viper.BindPFlag("commit.prompt", commitCmd.Flags().Lookup("prompt"))
 
-	rootCmd.LocalFlags().StringVarP(&templateFile, "templateFile", "f", "", "the file with the template to be used by the llm, the content will be sent directly to the llm (mode will be ignored if this flag is set)")
+	commitCmd.LocalFlags().StringVarP(&templateFile, "templateFile", "f", "", "the file with the template to be used by the llm, the content will be sent directly to the llm (mode will be ignored if this flag is set)")
 	viper.BindPFlag("commit.promptFile", commitCmd.Flags().Lookup("promptFile"))
 }
