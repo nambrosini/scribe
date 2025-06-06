@@ -26,6 +26,17 @@ var commitCmd = &cobra.Command{
 	Long: `Commit takes the info passed via flags, sends the request with the requested template to the llm and starts the commit with the response.
 	Note: before it commits, there is the possibility of making changes to the message.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		hasChanges, err := logic.HasStagedChanges()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if !hasChanges {
+			fmt.Println("no changes added to commit (use \"git add\" and/or \"git commit -a\")")
+			os.Exit(1)
+		}
+
 		msg, err := logic.SendRequest(cfg)
 		if err != nil {
 			fmt.Println(err)

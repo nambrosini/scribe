@@ -33,9 +33,6 @@ const (
 	User   Role = "user"
 )
 
-func main() {
-}
-
 func SendRequest(cfg config.AppConfig) (string, error) {
 	messages, err := BuildMessages(cfg.Commit.Template, cfg.Commit.Issue, cfg.Commit.Type)
 	if err != nil {
@@ -76,8 +73,11 @@ func SendRequest(cfg config.AppConfig) (string, error) {
 		return "", nil
 	}
 
-	if cfg.Model.ModelType == "ollama" {
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Error sending request:", string(body))
+	}
 
+	if cfg.Model.ModelType == "ollama" {
 		// var response ResponseBody
 		var response OllamaResponse
 
@@ -88,6 +88,7 @@ func SendRequest(cfg config.AppConfig) (string, error) {
 
 		return response.Message.Content, nil
 	}
+
 	var response ResponseBody
 
 	err = json.Unmarshal(body, &response)
@@ -164,6 +165,22 @@ func GetGitDiff() (string, error) {
 
 	// Print the output
 	return string(output), nil
+}
+
+func HasStagedChanges() (bool, error) {
+	cmd := exec.Command("git", "diff", "--cached", "--quiet")
+	err := cmd.Run()
+
+	if err != nil {
+		// If the command fails, it means there are staged changes
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return exitErr.ExitCode() != 0, nil
+		}
+		return false, err
+	}
+
+	// If the command succeeds, it means there are no staged changes
+	return false, nil
 }
 
 type RequestBody struct {
